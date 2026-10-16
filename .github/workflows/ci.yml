@@ -1,0 +1,63 @@
+
+name: FA2 CI-CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test-build-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend dependencies
+        run: pip install -r docker/backend/requirements.txt
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Build backend image
+        run: docker build -t fa2-backend ./docker/backend
+
+      - name: Build frontend image
+        run: docker build -t fa2-frontend ./docker/frontend
+
+      - name: Log in to Docker Hub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push backend image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v6
+        with:
+          context: ./docker/backend
+          push: true
+          tags: |
+            sakshisankaye/devops-fa1-backend:latest
+            sakshisankaye/devops-fa1-backend:${{ github.sha }}
+
+      - name: Build and push frontend image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v6
+        with:
+          context: ./docker/frontend
+          push: true
+          tags: |
+            sakshisankaye/devops-fa1-frontend:latest
+            sakshisankaye/devops-fa1-frontend:${{ github.sha }}

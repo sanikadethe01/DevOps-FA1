@@ -1,1 +1,0 @@
-A containerized Flask application with a frontend, backend API, and Terraform configuration for deploying separate QA, UAT, and production environments.

@@ -1,84 +1,48 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>FA1 - Infrastructure as Code</title>
+    <title>FA1</title>
 
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: Arial;
             text-align: center;
-            margin-top: 80px;
-            background-color: #f4f6f8;
+            margin-top: 100px;
         }
 
-        .container {
-            width: 500px;
+        .box {
+            width: 450px;
             margin: auto;
-            padding: 35px;
-            background-color: white;
+            padding: 30px;
+            border: 1px solid #ccc;
             border-radius: 10px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
-        }
-
-        h1 {
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            color: #555;
-            margin-bottom: 25px;
-        }
-
-        .environment {
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 20px;
         }
 
         button {
-            padding: 12px 25px;
-            font-size: 16px;
-            border: none;
-            border-radius: 6px;
+            padding: 10px 20px;
             cursor: pointer;
-            background-color: #333;
-            color: white;
-        }
-
-        button:hover {
-            background-color: #555;
         }
 
         #result {
-            margin-top: 20px;
             font-weight: bold;
-        }
-
-        .info {
-            margin-top: 25px;
-            font-size: 14px;
-            color: #666;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="container">
+    <div class="box">
 
         <h1>Formative Assessment 1</h1>
 
-        <p class="subtitle">
-            Terraform & Docker Multi-Environment Deployment
-        </p>
-
-        <div class="environment">
-            Environment: <span id="environment">Loading...</span>
-        </div>
+        <p>Terraform & Docker Deployment</p>
 
         <p>
-            Frontend container is running successfully.
+            Environment:
+            <b id="environment">Loading...</b>
         </p>
+
+        <p>Frontend is running successfully.</p>
 
         <button onclick="checkBackend()">
             Check Backend
@@ -86,70 +50,40 @@
 
         <p id="result"></p>
 
-        <div class="info">
-            Frontend: Docker + Nginx<br>
-            Backend: Docker + Flask<br>
+        <hr>
+
+        <p>
+            Frontend: Nginx<br>
+            Backend: Flask<br>
             Infrastructure: Terraform
-        </div>
+        </p>
 
     </div>
 
     <script>
 
-        // Detect environment from frontend port
-        const port = window.location.port;
+        let environment = "Kubernetes";
 
-        let environment;
-        let backendPort;
+	document.getElementById("environment").innerText = environment;
 
-        if (port === "8081") {
-            environment = "QA";
-            backendPort = "5001";
-        }
-        else if (port === "8082") {
-            environment = "UAT";
-            backendPort = "5002";
-        }
-        else if (port === "8083") {
-            environment = "PROD";
-            backendPort = "5003";
-        }
-        else {
-            environment = "UNKNOWN";
-            backendPort = "5003";
-        }
 
-        document.getElementById("environment").innerText = environment;
-
-        async function checkBackend() {
-
-            const result = document.getElementById("result");
-
-            result.innerText = "Connecting to backend...";
-
-            try {
-
-                const response = await fetch(
-                    `http://localhost:${backendPort}/api`
-                );
-
-                if (!response.ok) {
-                    throw new Error("Backend response error");
-                }
-
-                const data = await response.json();
-
-                result.innerText = data.message;
-
+        function checkBackend() {
+    fetch("/api")
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Backend request failed");
             }
-            catch (error) {
-
-                result.innerText =
-                    " Backend connection failed";
-
-                console.error(error);
-            }
-        }
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById("result").innerText =
+                "✓ " + data.message;
+        })
+        .catch(error => {
+            document.getElementById("result").innerText =
+                "Backend connection failed";
+        });
+}
 
     </script>
 
